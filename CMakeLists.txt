@@ -15,13 +15,13 @@ FetchContent_MakeAvailable(juce)
 
 # Plugin Target Setup
 juce_add_plugin(LightWeaver
-    COMPANY_NAME "LightWeaver"
+    COMPANY_NAME "codingsolutions"
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT TRUE
     IS_MIDI_EFFECT TRUE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    PLUGIN_MANUFACTURER_CODE Ltwv
+    PLUGIN_MANUFACTURER_CODE coso
     PLUGIN_CODE Ltw1
     FORMATS VST3
 )

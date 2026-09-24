@@ -9,8 +9,17 @@
 
 ## 📦 Sprint 1: JUCE-VST3-Skelett & Deployment (ABGESCHLOSSEN)
 - [x] `CMakeLists.txt` aufsetzen (C++20, JUCE 8 FetchContent, VST3 MIDI-Effect)
-- [x] Post-Build Step eingerichtet (`C:\Program Files\Common Files\VST3\`)
 - [x] Erfolgreicher Lade-Test in Cubase
+
+---
+
+## Spike Sprint: Drag & Drop MIDI Keyframe Feasibility (Prior to Sprint 2)
+> **Goal:** Validate JUCE's native Drag-and-Drop export of generated MIDI data into Cubase tracks across supported host environments.
+
+- [ ] **Spike Task 1:** Implement `juce::DragAndDropContainer` and a temporary file/memory export helper for `.mid` keyframe snippets.
+- [ ] **Spike Task 2:** Verify drag payload behavior in Cubase (ensure Cubase accepts the dropped `.mid` snippet as a inline MIDI Part on the target MIDI track at locator position).
+- [ ] **Spike Task 3:** Test MIDI CC pass-through from Cubase back into `processBlock()` during scrub/playback for visualizer sync.
+- [ ] **Deliverable:** Proof of Concept (PoC) confirming seamless drop-to-track functionality in Cubase.
 
 ---
 

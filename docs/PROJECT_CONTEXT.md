@@ -7,7 +7,7 @@ It runs inside **Steinberg Cubase** as a MIDI Effect and transmits `MIDI CC` mes
 ### Repositories & Hardware Link
 * **Plugin Repository:** `vst-LightWeaver`
 * **Hardware Bridge Repo:** https://github.com/chrisneukam/arduino-MidiDmxBridge/tree/main
-* **Bridge Functionality:** Listens to a user-defined MIDI channel (Default: **Channel 9**). It receives `MIDI CC` messages, scales the 7-bit MIDI value (0–127) to an 8-bit DMX value (0–255, by multiplying by 2), and maps `CC Number` directly to `DMX Channel Number`.
+* **Bridge Functionality:** Listens to a user-defined MIDI channel (Default: **Channel 9**). It receives `MIDI CC` messages, scales the 7-bit MIDI value (0–127) to an 8-bit DMX value (0–254, by multiplying by 2), and maps `CC Number` directly to `DMX Channel Number`.
 
 ---
 
@@ -111,3 +111,25 @@ When prompting GitHub Copilot in VS Code:
 2. Demand JUCE 8 & C++20 compliant code (prefer std::unique_ptr, override keywords, RAII).
 3. Enforce strict separation: No GUI components (juce::Component) inside PluginProcessor.
 4. Keep all source files under `src/`; do not introduce a parallel `Source/` tree.
+
+## Architectural Decision: Keyframe Generation & Workflow Strategy
+
+### Context & Constraint
+- **Target Hardware:** Cymatic LP-16 (Live Multitrack & MIDI Player).
+- **Core Requirement:** All lighting commands must coexist with guitar processor (e.g., Line6 HX Stomp) program changes/CCs on a standard Cubase MIDI track for final `.mid` file export.
+- **Problem with VST Automation & DAW Live Recording:**
+  1. DAW Automation cannot be exported directly to standard `.mid` files for the LP-16.
+  2. Live recording of MIDI CCs via VST output requires running the transport engine, which conflicts with static scene design at set locator positions.
+
+### Architectural Solution: Drag-and-Drop MIDI Keyframe Generator
+1. **LightWeaver VST3 Plugin Role:**
+   - Functions as an interactive 2D Visualizer & MIDI Keyframe Generator.
+   - Operates as a VST3 Audio Effect / VSTi with MIDI I/O enabled.
+2. **Keyframe Creation Workflow:**
+   - User designs light scene in stopped transport state via UI controls (color pickers, dimmers).
+   - UI provides a "Drag Scene Keyframe" control.
+   - User drags the scene from the VST UI directly onto the Cubase MIDI track.
+   - JUCE transfers a dynamically created, lightweight MIDI payload (MIDI CC sequence for channels 1–22 on designated lighting MIDI channel) to Cubase.
+3. **Fades & Playback Rendering:**
+   - Transitions/Fades are drawn using Cubase native CC ramp/line tools between dropped keyframes.
+   - During playback/scrubbing, Cubase streams CC events back into `LightWeaver` (`processBlock`), updating the 2D visualizer in real-time.
