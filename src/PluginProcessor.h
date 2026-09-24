@@ -36,9 +36,19 @@ class LightWeaverAudioProcessor : public juce::AudioProcessor {
   // Accessor for State Management
   juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
 
+  int getLastMidiCcChannel() const noexcept { return lastMidiCcChannel.load(); }
+  int getLastMidiCcNumber() const noexcept { return lastMidiCcNumber.load(); }
+  int getLastMidiCcValue() const noexcept { return lastMidiCcValue.load(); }
+  uint32_t getMidiCcEventCount() const noexcept { return midiCcEventCount.load(); }
+
  private:
   juce::AudioProcessorValueTreeState apvts;
   juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+
+  std::atomic<int> lastMidiCcChannel{0};
+  std::atomic<int> lastMidiCcNumber{0};
+  std::atomic<int> lastMidiCcValue{0};
+  std::atomic<uint32_t> midiCcEventCount{0};
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LightWeaverAudioProcessor)
 };

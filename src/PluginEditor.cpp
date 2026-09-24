@@ -43,6 +43,7 @@ LightWeaverAudioProcessorEditor::LightWeaverAudioProcessorEditor(LightWeaverAudi
   setSize(1000, 700);
   setResizable(true, true);
   setResizeLimits(800, 500, 1920, 1080);
+  startTimerHz(20);
 }
 
 LightWeaverAudioProcessorEditor::~LightWeaverAudioProcessorEditor() {}
@@ -53,7 +54,7 @@ void LightWeaverAudioProcessorEditor::paint(juce::Graphics& g) {
 
   g.setColour(juce::Colours::white);
   g.setFont(24.0f);
-  g.drawText("LightWeaver MIDI Drag-and-Drop Spike XXX", getLocalBounds().removeFromTop(120),
+  g.drawText("LightWeaver MIDI Drag-and-Drop Spike", getLocalBounds().removeFromTop(120),
              juce::Justification::centred, true);
 }
 
@@ -101,4 +102,15 @@ void LightWeaverAudioProcessorEditor::beginExternalMidiDrag() {
 
 void LightWeaverAudioProcessorEditor::setStatus(const juce::String& message) {
   statusLabel.setText(message, juce::dontSendNotification);
+}
+
+void LightWeaverAudioProcessorEditor::timerCallback() {
+  const auto eventCount = audioProcessor.getMidiCcEventCount();
+  if (eventCount == displayedMidiCcEventCount) return;
+
+  displayedMidiCcEventCount = eventCount;
+  statusLabel.setText("Received CC " + juce::String(audioProcessor.getLastMidiCcNumber()) + " = " +
+                          juce::String(audioProcessor.getLastMidiCcValue()) + " on MIDI channel " +
+                          juce::String(audioProcessor.getLastMidiCcChannel()),
+                      juce::dontSendNotification);
 }

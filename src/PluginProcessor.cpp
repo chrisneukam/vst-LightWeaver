@@ -66,7 +66,15 @@ void LightWeaverAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
                                              juce::MidiBuffer& midiMessages) {
   buffer.clear();
 
-  // Audio-thread logic for reading/emitting MIDI CC will be expanded in Sprint 2 & 3
+  for (const auto metadata : midiMessages) {
+    const auto message = metadata.getMessage();
+    if (!message.isController()) continue;
+
+    lastMidiCcChannel.store(message.getChannel());
+    lastMidiCcNumber.store(message.getControllerNumber());
+    lastMidiCcValue.store(message.getControllerValue());
+    midiCcEventCount.fetch_add(1);
+  }
 }
 
 juce::AudioProcessorEditor* LightWeaverAudioProcessor::createEditor() {

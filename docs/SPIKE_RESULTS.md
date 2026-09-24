@@ -53,6 +53,23 @@ C:\Users\<user>\AppData\Local\Temp\LightWeaver_Spike_CC1_3.mid
 
 The external file drag-and-drop workflow works for this use case. Cubase determines the target track from the drop location. LightWeaver does not generate a SysEx track; the generated file contains neither SysEx data nor multiple MIDI tracks. The observed behavior is controlled by Cubase's **Automatically Dissolve Format 0** setting.
 
+## MIDI Input and Pass-Through Verification
+
+Task 3 was verified in Cubase. MIDI events from the existing Cubase MIDI track are received by the LightWeaver VST3 plugin during playback.
+
+The tested routing is:
+
+- MIDI track: `MIDI 01`
+- Destination: `Audio 01: Ins. 1. LightWeaver - MIDI Input`
+- MIDI channel: `Channel 9`
+- Plugin role: VST3 MIDI input
+
+The plugin receives the MIDI events in `processBlock()`. Incoming MIDI data remains in the supplied `juce::MidiBuffer`, so the current implementation preserves MIDI pass-through while exposing the latest received CC to the editor for visualizer synchronization.
+
+![Cubase MIDI routing to LightWeaver MIDI Input](assets/cubase-midi-routing.png)
+
+The routing shown in the screenshot confirms the required Cubase connection for playback and scrubbing tests.
+
 ## Next Steps
 
 - Repeat the test with multiple drops onto different existing MIDI tracks.
