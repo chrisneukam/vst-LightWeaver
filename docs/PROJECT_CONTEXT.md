@@ -15,7 +15,8 @@ It runs inside **Steinberg Cubase** as a MIDI Effect and transmits `MIDI CC` mes
 1. **Cubase as Single Source of Truth:**
   * The plugin does **not** store or manage timeline keyframes internally.
   * Cubase handles all MIDI tracks, playback, recording, timing, and keyframe persistence.
-  * The GUI provides an **Insert Keyframe** action that writes the current parameter values to Cubase at the current locator position.
+  * The GUI provides a **Drag Scene Keyframe** action. It creates a temporary Standard MIDI File (Format 0) containing the current scene and starts an external file drag. Cubase inserts the dropped MIDI part into the existing track at the drop location.
+  * The plugin must not assume that a VST3 API can directly create or edit a Cubase MIDI part. The verified integration boundary is the external file drag-and-drop workflow documented in `docs/SPIKE_RESULTS.md`.
 2. **Bidirectional Communication & Streaming:**
   * **Plugin $\rightarrow$ Hardware:** User UI adjustments immediately emit live MIDI CCs. The values are also available to `processBlock()` for real-time MIDI output and automation handling.
   * **Cubase $\rightarrow$ Plugin:** Playing back or scrubbing the Cubase timeline feeds MIDI CCs into `processBlock()`, dynamically updating the UI controls, color pickers, and the 2D Stage Visualizer in real time.
@@ -41,7 +42,9 @@ vst-LightWeaver/
 │   ├── PROJECT_CONTEXT.md
 │   ├── MAPPING_SPEC.md
 │   ├── JUCE_STYLEGUIDE.md
-│   └── ROADMAP.md
+│   ├── ROADMAP.md
+│   ├── SPIKE_RESULTS.md
+│   └── assets/                         # Manual Cubase test screenshots
 └── src/
     ├── PluginProcessor.h / .cpp       # AudioProcessor & APVTS Setup
     ├── PluginEditor.h / .cpp          # Main AudioProcessorEditor
@@ -102,7 +105,9 @@ struct Fixture {
 * Audio Thread (AudioProcessor): Must remain real-time safe. Absolutely NO allocations (new, std::vector::push_back), disk I/O, OS logging (DBG), or mutex locks inside processBlock().
 * Lock-Free Parameter Passing: To pass incoming MIDI CC data from processBlock() back to the UI for live visualization, use std::atomic variables or juce::AbstractFifo buffers.
 * `processBlock()` must not allocate, lock, perform I/O, or log. Any MIDI event storage required for output must be preallocated or written directly into the supplied `juce::MidiBuffer`.
-* GUI-originated parameter changes must be emitted immediately without waiting for transport playback. The Insert Keyframe action is a separate explicit write of the current GUI/APVTS values into Cubase.
+* GUI-originated parameter changes must be emitted immediately without waiting for transport playback. GUI code must hand off pending MIDI output through a preallocated lock-free mechanism; it must not access the host MIDI buffer directly.
+* Incoming MIDI CCs are inspected in `processBlock()` and published to the UI through atomics or a lock-free FIFO. The incoming `juce::MidiBuffer` must remain pass-through data.
+* The verified spike exposes the latest incoming CC through atomics for UI monitoring. Future visualizer and APVTS synchronization must preserve this audio-thread/UI-thread boundary.
 
 ## 6. GitHub Copilot Usage Guidelines
 When prompting GitHub Copilot in VS Code:
@@ -128,8 +133,30 @@ When prompting GitHub Copilot in VS Code:
 2. **Keyframe Creation Workflow:**
    - User designs light scene in stopped transport state via UI controls (color pickers, dimmers).
    - UI provides a "Drag Scene Keyframe" control.
-   - User drags the scene from the VST UI directly onto the Cubase MIDI track.
-   - JUCE transfers a dynamically created, lightweight MIDI payload (MIDI CC sequence for channels 1–22 on designated lighting MIDI channel) to Cubase.
+    - The plugin creates a temporary Format-0 Standard MIDI File with one MIDI track and the current lighting CC events.
+  - User drags the scene from the VST UI directly onto the existing Cubase MIDI track.
+  - Cubase inserts the dropped MIDI part into the track under the drop location when **Preferences > MIDI > MIDI File > Automatically Dissolve Format 0** is disabled.
+  - The payload uses CC numbers 1–22 on the configured lighting MIDI channel; these are not MIDI channels 1–22.
 3. **Fades & Playback Rendering:**
    - Transitions/Fades are drawn using Cubase native CC ramp/line tools between dropped keyframes.
    - During playback/scrubbing, Cubase streams CC events back into `LightWeaver` (`processBlock`), updating the 2D visualizer in real-time.
+
+### Verified Spike Findings
+
+The Spike Sprint is complete for the current Cubase workflow. The verified facts are:
+
+1. JUCE can generate a temporary Format-0 MIDI file and start an external file drag from the plugin editor.
+2. Cubase inserts the MIDI part into the existing target MIDI track when **Automatically Dissolve Format 0** is disabled.
+3. The generated file contains one MIDI track, no SysEx data, and the expected CC payload.
+4. Cubase can route MIDI track data back into the LightWeaver VST3 MIDI input on channel 9 during playback and scrubbing.
+5. `processBlock()` can inspect incoming CCs without removing them from the supplied `juce::MidiBuffer`; the latest CC is published to the editor through atomics.
+
+The screenshot and reproducible host setup are documented in `docs/SPIKE_RESULTS.md`.
+
+### Implementation Rules for Future Sessions
+
+1. Do not replace the verified Format-0 external file drag with direct VST automation or an assumed Cubase-specific MIDI-part API.
+2. Do not add allocations, locks, file I/O, callbacks into UI objects, or logging to `processBlock()`.
+3. Keep MIDI file creation and external drag startup on the message thread. Do not capture the editor in an asynchronous native drag completion callback.
+4. Treat APVTS as the persistent current-scene state. Incoming playback CCs may update visual state according to the defined precedence rules, but blackout output must not overwrite APVTS values.
+5. Keep all fixture mapping and CC numbering aligned with `docs/MAPPING_SPEC.md`.

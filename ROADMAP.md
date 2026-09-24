@@ -34,10 +34,13 @@
   - [ ] Header-Komponente (MIDI Channel Dropdown)
   - [ ] 6 `FixtureCard`-Komponenten mit `juce::ColourSelector` & Dimmer-Fadern
   - [ ] UI-Regler per APVTS-Attachments verknüpfen
-  - [ ] `Insert Keyframe`-Button für die aktuellen Werte an der Locator-Position vorsehen
+  - [ ] `Drag Scene Keyframe`-Control für die aktuellen APVTS-Werte vorsehen
+  - [ ] Format-0-SMF mit einem Track und den aktuellen CCs erzeugen und per externem Datei-Drag an Cubase übergeben
+  - [ ] Cubase-Importvoraussetzung aus `docs/SPIKE_RESULTS.md` in der UI-/Workflow-Dokumentation vermerken
 - [ ] **Real-Time Output:**
-  - [ ] GUI-Änderungen sofort als MIDI CC ausgeben
-  - [ ] Ungefiltertes MIDI-Pass-through sicherstellen
+  - [ ] GUI-Änderungen sofort als MIDI CC ausgeben, ohne auf Transport-Playback zu warten
+  - [ ] GUI-MIDI-Ausgabe über vorallokierte atomare Zustände oder `juce::AbstractFifo` an `processBlock()` übergeben
+  - [ ] Ungefiltertes MIDI-Pass-through beibehalten; eingehende Events nicht aus `juce::MidiBuffer` entfernen
 - [ ] **Meilenstein:** Bewegung der Plugin-Regler steuert die Bridge live an.
 
 ---
@@ -45,8 +48,10 @@
 ## 🔄 Sprint 3: Read-from-Track & Blackout on Stop
 **Ziel:** Bidirektionales Feedback (Spur-Daten im Plugin anzeigen) & Transport-Safety.
 
-- [ ] Reading eingehender MIDI CCs von der Cubase-Spur in `processBlock()`
-- [ ] Live-Aktualisierung der Color Picker & Dimmer im Plugin beim Abspielen/Faden
+- [x] Reading eingehender MIDI CCs von der Cubase-Spur in `processBlock()` für den aktuellen CC-Monitoring-Snapshot
+- [x] MIDI-Empfang und Pass-through aus Cubase während Playback/Scrubbing im Spike verifiziert
+- [ ] Live-Aktualisierung der Color Picker, Dimmer und Stage-Visualisierung anhand eingehender CCs
+- [x] Eingehende CCs über atomare Snapshots an den Message Thread übergeben (aktueller CC-Monitoring-Snapshot)
 - [ ] Playhead Monitoring & "Blackout on Stop" Logic (bei jedem Stop CC 1..22 auf 0, ohne GUI/APVTS zu verändern)
 - [ ] **Meilenstein:** Fließendes Feedback im UI beim Abspielen der Cubase-Spur + Blackout bei Stopp.
 
