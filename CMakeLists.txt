@@ -38,6 +38,9 @@ target_sources(LightWeaver
     PRIVATE
         src/PluginProcessor.cpp
         src/PluginEditor.cpp
+        src/UI/HeaderComponent.cpp
+        src/UI/FixtureCard.cpp
+        src/UI/FixtureContainerComponent.cpp
 )
 
 target_include_directories(LightWeaver

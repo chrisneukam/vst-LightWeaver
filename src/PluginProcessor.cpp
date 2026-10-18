@@ -7,6 +7,7 @@ LightWeaverAudioProcessor::LightWeaverAudioProcessor()
     : AudioProcessor(BusesProperties()),
 #endif
       apvts(*this, nullptr, "Parameters", createParameterLayout()) {
+  midiChannelParameter = apvts.getRawParameterValue("midi_channel");
 }
 
 LightWeaverAudioProcessor::~LightWeaverAudioProcessor() {}
@@ -25,11 +26,11 @@ LightWeaverAudioProcessor::createParameterLayout() {
   // Helper to generate Spot RGB Parameters
   auto addSpotParams = [&](const juce::String& prefix, const juce::String& name) {
     params.push_back(std::make_unique<juce::AudioParameterInt>(
-        juce::ParameterID{prefix + "_red", 1}, name + " Red", 0, 255, 0));
+        juce::ParameterID{prefix + "_red", 1}, name + " Red", 0, 254, 0));
     params.push_back(std::make_unique<juce::AudioParameterInt>(
-        juce::ParameterID{prefix + "_green", 1}, name + " Green", 0, 255, 0));
+        juce::ParameterID{prefix + "_green", 1}, name + " Green", 0, 254, 0));
     params.push_back(std::make_unique<juce::AudioParameterInt>(
-        juce::ParameterID{prefix + "_blue", 1}, name + " Blue", 0, 255, 0));
+        juce::ParameterID{prefix + "_blue", 1}, name + " Blue", 0, 254, 0));
   };
 
   // CLB4 Spots 1 - 4
@@ -44,11 +45,11 @@ LightWeaverAudioProcessor::createParameterLayout() {
 
   // Dimmers
   params.push_back(std::make_unique<juce::AudioParameterInt>(
-      juce::ParameterID{"clb4_master_dimmer", 1}, "CLB4 Master Dimmer", 0, 255, 255));
+      juce::ParameterID{"clb4_master_dimmer", 1}, "CLB4 Master Dimmer", 0, 254, 0));
   params.push_back(std::make_unique<juce::AudioParameterInt>(juce::ParameterID{"panel1_dimmer", 1},
-                                                             "Panel 1 Dimmer", 0, 255, 255));
+                                                             "Panel 1 Dimmer", 0, 254, 0));
   params.push_back(std::make_unique<juce::AudioParameterInt>(juce::ParameterID{"panel2_dimmer", 1},
-                                                             "Panel 2 Dimmer", 0, 255, 255));
+                                                             "Panel 2 Dimmer", 0, 254, 0));
 
   return {params.begin(), params.end()};
 }
@@ -75,6 +76,28 @@ void LightWeaverAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     lastMidiCcValue.store(message.getControllerValue());
     midiCcEventCount.fetch_add(1);
   }
+
+  const auto pendingMask = pendingMidiCcMask.exchange(0, std::memory_order_acquire);
+  const auto midiChannel = midiChannelParameter != nullptr
+                               ? juce::jlimit(1, 16, juce::roundToInt(midiChannelParameter->load()))
+                               : 9;
+
+  for (int ccNumber = 1; ccNumber <= 22; ++ccNumber) {
+    if ((pendingMask & (1u << ccNumber)) == 0) continue;
+
+    const auto dmxValue =
+        pendingMidiCcValues[static_cast<size_t>(ccNumber)].load(std::memory_order_relaxed);
+    const auto midiValue = juce::jlimit(0, 127, juce::roundToInt(dmxValue * 0.5f));
+    midiMessages.addEvent(juce::MidiMessage::controllerEvent(midiChannel, ccNumber, midiValue), 0);
+  }
+}
+
+void LightWeaverAudioProcessor::enqueueGuiMidiCc(int ccNumber, int dmxValue) noexcept {
+  if (ccNumber < 1 || ccNumber > 22) return;
+
+  pendingMidiCcValues[static_cast<size_t>(ccNumber)].store(juce::jlimit(0, 254, dmxValue),
+                                                           std::memory_order_relaxed);
+  pendingMidiCcMask.fetch_or(1u << ccNumber, std::memory_order_release);
 }
 
 juce::AudioProcessorEditor* LightWeaverAudioProcessor::createEditor() {

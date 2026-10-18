@@ -22,25 +22,25 @@ When **Automatically Dissolve Format 0** is enabled, Cubase creates additional t
 1. Open Cubase and create a MIDI track.
 2. Make sure **Automatically Dissolve Format 0** is disabled.
 3. Open LightWeaver as a VST3 instrument/MIDI effect.
-4. Drag the **Drag sample MIDI to Cubase** control from the plugin window onto the existing MIDI track.
+4. Drag the **DRAG KEYFRAME** control from the plugin window onto the existing MIDI track.
 5. Verify the generated MIDI part on the target track.
 6. Play the event and inspect the MIDI output.
 
 ## Test Payload
 
-The current spike file contains:
+The current scene keyframe file contains:
 
 - Standard MIDI File, Format 0
 - One MIDI track
-- MIDI channel 9
-- Controller event: CC #1
-- Value: 127
+- MIDI channel selected in the plugin (default: 9)
+- Current mapped lighting values as controller events on CC 1 through CC 22 (CC 13 is unused)
+- DMX values scaled to MIDI's 0..127 range
 - No SysEx data
 
 The file is created in the Windows temporary folder, for example:
 
 ```text
-C:\Users\<user>\AppData\Local\Temp\LightWeaver_Spike_CC1_3.mid
+C:\Users\<user>\AppData\Local\Temp\LightWeaver_Scene_3.mid
 ```
 
 ## Cubase Setting Reference

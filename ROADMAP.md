@@ -27,20 +27,20 @@
 **Ziel:** Steuerung der Scheinwerfer über das Plugin GUI mit Live-Ausgabe von MIDI CCs an die Hardware-Bridge.
 
 - [ ] **State Layer:**
-  - [ ] `APVTS` im `AudioProcessor` einrichten (MIDI Channel, RGB + Dimmer für alle 6 Fixtures)
+  - [x] `APVTS` im `AudioProcessor` einrichten (MIDI Channel, RGB + Dimmer für alle 6 Fixtures)
   - [ ] `FixtureData` und `FixtureManager` unter `src/Model/` anlegen; Fixture-Profile im MVP statisch definieren
-  - [ ] Interne RGB-/Dimmerwerte auf `0..254` begrenzen
+  - [x] Interne RGB-/Dimmerwerte auf `0..254` begrenzen
 - [ ] **GUI Layer:**
-  - [ ] Header-Komponente (MIDI Channel Dropdown)
-  - [ ] 6 `FixtureCard`-Komponenten mit `juce::ColourSelector` & Dimmer-Fadern
-  - [ ] UI-Regler per APVTS-Attachments verknüpfen
-  - [ ] `Drag Scene Keyframe`-Control für die aktuellen APVTS-Werte vorsehen
-  - [ ] Format-0-SMF mit einem Track und den aktuellen CCs erzeugen und per externem Datei-Drag an Cubase übergeben
-  - [ ] Cubase-Importvoraussetzung aus `docs/SPIKE_RESULTS.md` in der UI-/Workflow-Dokumentation vermerken
+  - [x] Header-Komponente (MIDI Channel Dropdown)
+  - [x] 6 `FixtureCard`-Komponenten mit `juce::ColourSelector` & Dimmer-Fadern
+  - [x] RGB- und Dimmer-Steuerungen an APVTS anbinden
+  - [x] `Drag Scene Keyframe`-Control für die aktuellen APVTS-Werte vorsehen
+  - [x] Format-0-SMF mit einem Track und den aktuellen CCs erzeugen und per externem Datei-Drag an Cubase übergeben
+  - [x] Cubase-Importvoraussetzung aus `docs/SPIKE_RESULTS.md` in der UI-/Workflow-Dokumentation vermerken
 - [ ] **Real-Time Output:**
-  - [ ] GUI-Änderungen sofort als MIDI CC ausgeben, ohne auf Transport-Playback zu warten
-  - [ ] GUI-MIDI-Ausgabe über vorallokierte atomare Zustände oder `juce::AbstractFifo` an `processBlock()` übergeben
-  - [ ] Ungefiltertes MIDI-Pass-through beibehalten; eingehende Events nicht aus `juce::MidiBuffer` entfernen
+  - [x] GUI-Änderungen sofort als MIDI CC ausgeben, ohne auf Transport-Playback zu warten
+  - [x] GUI-MIDI-Ausgabe über vorallokierte atomare Zustände oder `juce::AbstractFifo` an `processBlock()` übergeben
+  - [x] Ungefiltertes MIDI-Pass-through beibehalten; eingehende Events nicht aus `juce::MidiBuffer` entfernen
 - [ ] **Meilenstein:** Bewegung der Plugin-Regler steuert die Bridge live an.
 
 ---

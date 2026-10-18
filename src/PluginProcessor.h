@@ -35,6 +35,7 @@ class LightWeaverAudioProcessor : public juce::AudioProcessor {
 
   // Accessor for State Management
   juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
+  void enqueueGuiMidiCc(int ccNumber, int dmxValue) noexcept;
 
   int getLastMidiCcChannel() const noexcept { return lastMidiCcChannel.load(); }
   int getLastMidiCcNumber() const noexcept { return lastMidiCcNumber.load(); }
@@ -49,6 +50,9 @@ class LightWeaverAudioProcessor : public juce::AudioProcessor {
   std::atomic<int> lastMidiCcNumber{0};
   std::atomic<int> lastMidiCcValue{0};
   std::atomic<uint32_t> midiCcEventCount{0};
+  std::atomic<float>* midiChannelParameter{nullptr};
+  std::array<std::atomic<int>, 23> pendingMidiCcValues{};
+  std::atomic<uint32_t> pendingMidiCcMask{0};
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LightWeaverAudioProcessor)
 };

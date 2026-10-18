@@ -3,6 +3,8 @@
 #include <JuceHeader.h>
 
 #include "PluginProcessor.h"
+#include "UI/FixtureContainerComponent.h"
+#include "UI/HeaderComponent.h"
 
 class LightWeaverAudioProcessorEditor : public juce::AudioProcessorEditor, private juce::Timer {
  public:
@@ -14,14 +16,17 @@ class LightWeaverAudioProcessorEditor : public juce::AudioProcessorEditor, priva
   void timerCallback() override;
 
  private:
-  class DragSourceComponent;
+  class StageViewPreview;
 
-  juce::File createSampleMidiFile();
+  juce::File createSceneMidiFile();
   void beginExternalMidiDrag();
   void setStatus(const juce::String& message);
 
   LightWeaverAudioProcessor& audioProcessor;
-  std::unique_ptr<DragSourceComponent> dragSource;
+  std::unique_ptr<HeaderComponent> headerComponent;
+  std::unique_ptr<StageViewPreview> stageViewPreview;
+  std::unique_ptr<FixtureContainerComponent> fixtureContainer;
+  juce::Viewport fixtureViewport;
   juce::Label statusLabel;
   uint32_t displayedMidiCcEventCount{0};
 
